@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-backend
+spec:
+  replicas: {{ .Values.backend.replicasCount }}
+  affinity:
+    antiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - {{ .Release.Name }}-backend
+            topologyKey: "kubernetes.io/hostname"
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-backend
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          env:
+            - name: DB_HOST
+              value: {{ .Release.Name }}-mysql
+            - name: DB_NAME
+              value: {{ .Values.mysql.database }}
+            - name: DB_USER
+              value: {{ .Values.mysql.username }}
+            - name: DB_PASS
+              value: {{ .Values.mysql.username }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.containerPort }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.healthCheckPath }}
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readiness :
+            httpGet:
+              path: {{ .Values.backend.healthCheckPath }}
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources: {{- toYaml .Values.backend.resources | nindent 12 }}

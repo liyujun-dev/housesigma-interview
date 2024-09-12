@@ -1,0 +1,22 @@
+x-common: &common
+  env_file: .env
+
+services:
+  mock:
+    <<: *common
+    image: python:3.12
+    depends_on:
+      - db
+    command: bash -c "pip install -r /src/requirements.txt && python /src/mock.py"
+    volumes:
+      - ./mock.py:/src/mock.py
+      - ./requirements.txt:/src/requirements.txt
+  db:
+    <<: *common
+    image: mongo:latest
+    healthcheck:
+      test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

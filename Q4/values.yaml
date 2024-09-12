@@ -1,0 +1,45 @@
+frontend:
+  image:
+    repository: example/frontend
+    tag: latest
+  containerPort: 9090
+  replicasCount: 2
+  healthCheckPath: /healthz
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  ingress:
+    className: nginx
+    hostname: frontend.example.com
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPU: 90
+
+backend:
+  image:
+    repository: example/backend
+    tag: latest
+  containerPort: 8080
+  replicasCount: 3
+  healthCheckPath: /healthz
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1024Mi
+    limits:
+      cpu: 200m
+      memory: 2048Mi
+
+mysql:
+  image:
+    repository: mysql
+    tag: 8.0
+  username: root
+  password: p@ssW0rd
+  database: example
+  port: 3306
